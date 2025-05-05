@@ -1,5 +1,5 @@
 ---
-title: "Code"
+title: "Final Project Code"
 author: "Csilva07"
 date: "2025-05-03"
 output: html_document
@@ -9,22 +9,62 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Packages
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+install.packages("ggplot2")
+install.packages("tidyr")
+install.packages("ROCR")
+install.packages("dplyr")
+install.packages("stringr")
+install.packages("broom")
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(ROCR)
+library(stringr)
+library(broom)
 ```
 
-## Including Plots
+## Repeated functions
 
-You can also embed plots, for example:
+```{r}
+#Standardise NCMP year from 2XXX/XX to 2XXX
+clean_year <- function(df, year_col = "NCMP.Year") {
+  df %>%
+    rename(Year = all_of(year_col)) %>%
+    mutate(
+      Year = as.numeric(str_extract(Year, "^[0-9]{4}"))
+      )
+}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#Replace NA with 0 
+replace_na_with_zero <- function(df, columns) {
+  df %>%
+    mutate(
+      across(all_of(columns), ~ ifelse(is.na(.), 0, .))
+      )
+}
+
+#Calculate obesity progression risk
+get_progression_risk <- function(df, prevalence_col = "Obesity.Prevalence") {
+  df %>%
+    pivot_wider(names_from = School.Year, values_from = !!sym(prevalence_col)) %>%
+    filter(!is.na(Reception) & !is.na(`Year 6`)) %>%
+    mutate(
+      Progression_Risk = `Year 6` - Reception
+      )
+}
+
+#My plot theme
+my_theme <- function() {
+  theme_minimal(base_size = 13) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          strip.text = element_text(face = "bold"))
+}
+
+#Calculate prevalence
+calculate_prevalence <- function(x, total) {
+  return(100 * x / total)
+}
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
