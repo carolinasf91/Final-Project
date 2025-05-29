@@ -167,14 +167,7 @@ gender_bmi_data <- gender_bmi_data %>%
   mutate(
     Obesity.Prevalence = (Obese..including.severe.obesity. / Number.Measured)*100
   )
-#bar graph plot option 1 - TO DECIDE
-ggplot(gender_bmi_data, aes(x = as.factor(Year), y = Obesity.Prevalence, fill = Gender)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Obesity Prevalence Over Time",
-       x = "Year", y = "Obesity Prevalence (%)") +
-  scale_fill_manual(values = c("Boys" = "#5B8FA8", "Girls" = "#C97B84", "Both" = "#A3B18A")) +
-  my_theme()
-#bar graph plot option 2 - TO DECIDE
+#bar graph plot
 ggplot(gender_bmi_data, aes(x = as.factor(Year), y = Obesity.Prevalence, fill = Gender)) +
   geom_bar(stat = "identity", position = "dodge") + 
   labs(title = "Obesity Prevalence Over Time",
@@ -270,7 +263,7 @@ obesity_transition <- obesity_transition %>%
     Prob_Overweight_or_Obese_Y6_given_R = 
       (Year6_Overweight + Year6_Obesity) / (Reception_Overweight + Reception_Obesity)
   )
-#Plot showing probability with 2020 smoothed due to COVID-19 impact
+#Plot showing probability with 2020 removed due to COVID-19 impact
 ggplot(obesity_transition %>% filter(Year != 2020), 
        aes(x = Year, y = Prob_Overweight_or_Obese_Y6_given_R, color = Gender)) +
   geom_line(size = 1) +
@@ -281,7 +274,7 @@ ggplot(obesity_transition %>% filter(Year != 2020),
   ) +
   scale_color_manual(values = c("Boys" = "#5B8FA8", "Girls" = "#C97B84","Both" = "#A3B18A")) +
   my_theme()
-#Plot showing probability without 2020 smoothed
+#Plot showing probability with 2020 smoothed
 ggplot(obesity_transition %>% filter(Year != 2020), 
        aes(x = Year, y = Prob_Overweight_or_Obese_Y6_given_R, color = Gender)) +
   geom_line(size = 1) +
@@ -486,28 +479,8 @@ ggplot(subcategory_progression_labeled, aes(x = Ethnic.category, y = Progression
   ) +
   my_theme()
 
-#Plot for obesity progression by ethnic subcategory. Facet by subcategory - option 1
-dot_data <- subcategory_progression %>%
-  pivot_longer(cols = c(Reception, `Year 6`),
-               names_to = "School_Year",
-               values_to = "Obesity_Prevalence") %>%
-  mutate(
-    School_Year = factor(School_Year, levels = c("Reception", "Year 6"))
-  )
-ggplot(dot_data, aes(x = School_Year, y = Obesity_Prevalence, group = Ethnic.subcategory)) +
-  geom_line(aes(color = Progression_Risk), size = 1) +
-  geom_point(aes(color = Progression_Risk), size = 3) +
-  scale_color_gradient(low = "#A3B18A", high = "#C97B84") + 
-  facet_wrap(~ Ethnic.subcategory, ncol = 3, scales = "free_y") +
-  labs(
-    title = "Obesity Progression by Ethnic Subcategory",
-    x = "School Year",
-    y = "Obesity Prevalence (%)",
-    color = "Progression Risk (%)"
-  ) +
-  my_theme()
 
-#Plot for obesity progression by ethnic subcategory - option 2
+#Plot for obesity progression by ethnic subcategory
 heatmap_data <- subcategory_progression %>%
   pivot_longer(cols = c(Reception, `Year 6`, Progression_Risk),
                names_to = "Metric",
@@ -619,19 +592,6 @@ ethnic_gender_progression <- ethnic_gender_estimate %>%
 print(ethnic_gender_progression)
 
 #Plot of obesity progression risk by ethnicity and gender 
-#Grouped bar chat - option 1
-ggplot(ethnic_gender_progression, aes(x = Ethnic.category, y = Progression_Risk, fill = Gender)) +
-  geom_col(position = "dodge", width = 0.7) +
-  scale_fill_manual(values = c("Boys" = "#5B8FA8", "Girls" = "#C97B84")) +
-  labs(
-    title = "Obesity Progression Risk by Ethnicity and Gender",
-    x = "Ethnic Group",
-    y = "Progression Risk (%)",
-    fill = "Gender"
-  ) +
-  my_theme()
-
-#Slope plot - option 2 
 #Pivot table for slope plot. Facet by category  
 slope_data <- ethnic_gender_progression %>%
   pivot_longer(cols = c(Reception, `Year 6`), names_to = "School_Year", values_to = "Obesity") %>%
@@ -651,24 +611,6 @@ ggplot(slope_data, aes(x = School_Year, y = Obesity, group = interaction(Ethnic.
   ) +
   my_theme()
 
-#Heatmap plot - option 3
-#Pivot table for heatmap
-heatmap_data <- ethnic_gender_progression %>%
-  pivot_longer(cols = c(Reception, `Year 6`, Progression_Risk),
-               names_to = "Metric", values_to = "Value")
-#Reordering of categories for a better layout
-heatmap_data$Ethnic.category <- factor(heatmap_data$Ethnic.category,
-                                       levels = unique(ethnic_gender_progression$Ethnic.category[order(-ethnic_gender_progression$Progression_Risk)]))
-ggplot(heatmap_data, aes(x = Metric, y = interaction(Ethnic.category, Gender), fill = Value)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient(low = "#5B8FA8", high = "#C97B84") +
-  labs(
-    title = "Obesity Prevalence and Progression by Ethnicity and Gender",
-    x = "Metric",
-    y = "Ethnic Group x Gender",
-    fill = "Value (%)"
-  ) +
-  my_theme()
 
 
 #------------------------------------------------------------------------------------------------------#
@@ -771,14 +713,14 @@ ggplot(geo_summary_region_only, aes(x = Year, y = Obesity.Prevalence, color = Sc
     color = "School Year"
   ) +
   my_theme()
-#Calculation of the national average obesity prevalence, for comparision with regional average obesity prevalence 
+#Calculation of the national average obesity prevalence, for comparison with regional average obesity prevalence 
 national_avg <- geo_summary_region_only %>%
   group_by(Year, School.Year) %>%
   summarise(
     National_Avg = mean(Obesity.Prevalence, na.rm = TRUE),
     .groups = "drop"
   )
-#Plot of regional trend overlayed with national averages. Facet by region  
+#Plot of regional trend over-layed with national averages. Facet by region  
 ggplot() +
   #Regional lines are solid
   geom_line(data = geo_summary_region_only, 
@@ -791,7 +733,6 @@ ggplot() +
   scale_color_manual(values = c("Reception" = "#5B8FA8", "Year 6" = "#C97B84")) +
   labs(
     title = "Regional Obesity Trends with National Average Overlay",
-    subtitle = "Reception and Year 6 Children",
     x = "Year",
     y = "Obesity Prevalence (%)",
     color = "School Year"
@@ -803,8 +744,7 @@ ggplot(geo_summary_region_only, aes(x = Year, y = Obesity.Prevalence, color = Sc
   facet_wrap(~ Region, scales = "free_y") +
   scale_color_manual(values = c("Reception" = "#5B8FA8", "Year 6" = "#C97B84")) +
   labs(
-    title = "Smoothed Obesity Trends Over Time by Region",
-    subtitle = "Reception and Year 6 (LOESS Smoothing)",
+    title = "Obesity Trends Over Time by Region with LOESS Smoothing",
     x = "Year",
     y = "Obesity Prevalence (%)",
     color = "School Year"
@@ -832,7 +772,6 @@ ggplot(geo_summary_region_only, aes(x = Year, y = Obesity.Prevalence, color = Sc
   scale_color_manual(values = c("Reception" = "#5B8FA8", "Year 6" = "#C97B84")) +
   labs(
     title = "Smoothed Obesity Trends with Peak Year",
-    subtitle = "Reception and Year 6",
     x = "Year",
     y = "Obesity Prevalence (%)",
     color = "School Year"
@@ -1243,7 +1182,7 @@ la_vs_averages <- la_avg %>%
 la_vs_averages %>%
   filter(School.Year == "Year 6") %>%
   arrange(desc(Diff_vs_Region))
-#Sort the table in ascending order showing the difference from from regional average, filtered to Year 6
+#Sort the table in ascending order showing the difference from regional average, filtered to Year 6
 la_vs_averages %>%
   filter(School.Year == "Year 6") %>%
   arrange(Diff_vs_Region)
@@ -1251,7 +1190,7 @@ la_vs_averages %>%
 la_vs_averages %>%
   filter(School.Year == "Year 6") %>%
   arrange(desc(Diff_vs_England))
-#Sort the table in ascending order showing the difference from from national average, filtered to Year 6
+#Sort the table in ascending order showing the difference from national average, filtered to Year 6
 la_vs_averages %>%
   filter(School.Year == "Year 6") %>%
   arrange(Diff_vs_England)
@@ -1292,7 +1231,7 @@ ggplot(la_spread, aes(x = Year, y = Range, color = School.Year, group = School.Y
 
 #------------------------------------------------------------------------------------------------------#
 #<----------------------Ethnicity & Location----------------------------- 
-#Analyis of ethnicity and location on obesity rates, using ONS 2021 census data for support  
+#Analysis of ethnicity and location on obesity rates, using ONS 2021 census data for support  
 #Load the ONS 2021 Census ethnicity data
 ethnicity_population <- read.csv("C:/Users/CAROL/My Drive/Uni/Birkbeck/Year 4/Project/My Project/Data/Processed/population-by-ethnicity-and-local-authority-2021.csv")
 #Calculate the average Year 6 obesity prevalence by local authority 
@@ -1346,7 +1285,7 @@ la_ethnic_long_ncmp <- la_ethnic_ncmp %>%
     names_prefix = "pct_",
     values_to = "Percentage"
   )
-#Facet plots showing the correlatin between ethnicity percentage and obesity prevalence 
+#Facet plots showing the correlation between ethnicity percentage and obesity prevalence 
 ggplot(la_ethnic_long_ncmp, aes(x = Percentage, y = Obesity_Prevalence)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "#1C5F8A") +
@@ -1732,11 +1671,12 @@ pred <- prediction(test_data_region$predicted_prob, test_data_region$obese_binar
 perf_roc <- performance(pred, "tpr", "fpr")
 perf_auc <- performance(pred, "auc")
 auc_region <- perf_auc@y.values[[1]]
+
 #ROC curve plot 
 plot(perf_roc, col = "#5B8FA8", lwd = 2, main = paste("Region + Ethnicity ROC Curve (AUC =", round(auc_region, 3), ")"))
 abline(a = 0, b = 1, lty = 2, col = "grey")
 #Print AUC 
-print(paste("AUC:", round(auc_region, 3)))
+print(paste("AUC (with Region + Ethnicity):", round(auc_region, 3)))
 
 #Check of model calibration by calculating the range and distribution of probabilities 
 summary(test_data_region$predicted_prob)
