@@ -1718,6 +1718,27 @@ print(paste("Mean cross-validated AUC (Region + Ethnicity):", round(mean_auc_reg
 #Predict using the testing data set 
 test_data_region$predicted_prob <- predict(model_region, newdata = test_data_region, type = "response")
 
+#Confusion matrix
+#Threshold classification 
+threshold <- 0.2
+test_data_region$predicted_class <- ifelse(test_data_region$predicted_prob > threshold, 1, 0)
+conf_matrix_regional <- table(Predicted = test_data_region$predicted_class, Actual = test_data_region$obese_binary)
+print("Confusion Matrix:")
+print(conf_matrix_regional)
+#Calculation of performance metrics
+TP <- conf_matrix_regional[2, 2] #True positives
+TN <- conf_matrix_regional[1, 1] #True negatives
+FP <- conf_matrix_regional[2, 1] #False positives
+FN <- conf_matrix_regional[1, 2] #False negatives
+#Calculation of accuracy, sensitivity and specificity 
+accuracy <- (TP + TN) / sum(conf_matrix_regional)
+sensitivity <- TP / (TP + FN)  
+specificity <- TN / (TN + FP)  
+cat("\nAccuracy:", round(accuracy, 3), "\n")
+cat("Sensitivity (Recall):", round(sensitivity, 3), "\n")
+cat("Specificity:", round(specificity, 3), "\n")
+
+
 #Summary mean predicted and actual obesity prevalence by region + ethnicity 
 risk_summary <- test_data_region %>%
   group_by(Region, Ethnic.category, drop = TRUE) %>%
@@ -2114,3 +2135,9 @@ auc_summary <- tibble::tibble(
 )
 #Print tibble
 print(auc_summary)
+
+
+
+
+
+
