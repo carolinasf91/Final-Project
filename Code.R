@@ -1660,7 +1660,8 @@ model_region <- glm(
   family = binomial
 )
 #View summary of the model 
-summary(model_region)
+tidy_model1 <- tidy(model_region)
+print(tidy_model1)
 
 #Using the testing data, predicting the obesity probability 
 test_data_region$predicted_prob <- predict(model_region, newdata = test_data_region, type = "response")
@@ -1677,6 +1678,9 @@ plot(perf_roc, col = "#5B8FA8", lwd = 2, main = paste("Region + Ethnicity ROC Cu
 abline(a = 0, b = 1, lty = 2, col = "grey")
 #Print AUC 
 print(paste("AUC (with Region + Ethnicity):", round(auc_region, 3)))
+
+
+
 
 #Check of model calibration by calculating the range and distribution of probabilities 
 summary(test_data_region$predicted_prob)
@@ -1780,7 +1784,8 @@ model_combined <- glm(
   family = binomial
 )
 #View summary of the model 
-summary(model_combined)
+tidy_model2 <- tidy(model_combined)
+print(tidy_model2)
 
 #Predicting the obesity probability using the testing data set 
 test_data_combined$predicted_combined <- predict(model_combined, newdata = test_data_combined, type = "response")
@@ -1991,7 +1996,8 @@ model_gender <- glm(
 )
 
 #View summary of the model 
-summary(model_gender)
+tidy_model3 <- tidy(model_gender)
+print(tidy_model3)
 
 #Predicting the obesity probability using the testing data set  
 test_data_gender$predicted_gender <- predict(model_gender, newdata = test_data_gender, type = "response")
@@ -2135,9 +2141,3 @@ auc_summary <- tibble::tibble(
 )
 #Print tibble
 print(auc_summary)
-
-
-
-
-
-
